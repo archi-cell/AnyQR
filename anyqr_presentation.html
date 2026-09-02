@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AnyQR™ — Digital Product Identity</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#070d12;
+    --bg-2:#0b141b;
+    --panel: rgba(255,255,255,0.045);
+    --panel-border: rgba(255,255,255,0.09);
+    --teal:#2dd4bf;
+    --teal-dim: rgba(45,212,191,0.14);
+    --violet:#8b7cf6;
+    --violet-dim: rgba(139,124,246,0.14);
+    --ink:#eef4f3;
+    --ink-dim: rgba(238,244,243,0.62);
+    --ink-faint: rgba(238,244,243,0.38);
+    --font-display:'Space Grotesk', sans-serif;
+    --font-body:'Inter', sans-serif;
+    --font-mono:'JetBrains Mono', monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{
+    height:100%;
+    background: var(--bg);
+    font-family: var(--font-body);
+    color: var(--ink);
+    overflow:hidden;
+  }
+  body{
+    background:
+      radial-gradient(circle at 15% 12%, rgba(45,212,191,0.10), transparent 45%),
+      radial-gradient(circle at 88% 82%, rgba(139,124,246,0.10), transparent 45%),
+      linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+  }
+
+  .deck{
+    position:relative;
+    height:100vh;
+    width:100vw;
+  }
+
+  .slide{
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    padding: 5.2vh 6vw 4vh;
+    opacity:0;
+    visibility:hidden;
+    transform: translateX(40px);
+    transition: opacity .55s ease, transform .55s ease, visibility .55s;
+    pointer-events:none;
+  }
+  .slide.active{
+    opacity:1;
+    visibility:visible;
+    transform: translateX(0);
+    pointer-events:auto;
+  }
+  .slide.prev{ transform: translateX(-40px); }
+
+  /* ---------- shared bits ---------- */
+  .kicker{
+    display:flex;
+    align-items:center;
+    gap:.6em;
+    font-family: var(--font-mono);
+    font-size:.72rem;
+    letter-spacing:.16em;
+    color: var(--teal);
+    text-transform:uppercase;
+    margin-bottom: 1.1em;
+  }
+  .kicker .num{
+    color: var(--ink-faint);
+  }
+  .kicker::after{
+    content:'';
+    flex:1;
+    height:1px;
+    background: var(--panel-border);
+  }
+  h1{
+    font-family: var(--font-display);
+    font-weight:600;
+    letter-spacing:-0.01em;
+    line-height:1.08;
+  }
+  .glass{
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 16px;
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    position:relative;
+  }
+  .glass::before{
+    content:'';
+    position:absolute;
+    inset:0;
+    border-radius:inherit;
+    padding:1px;
+    background: linear-gradient(135deg, rgba(45,212,191,0.35), rgba(255,255,255,0) 40%, rgba(139,124,246,0.25) 100%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events:none;
+  }
+  .pill{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    font-family: var(--font-mono);
+    font-size:.68rem;
+    font-weight:600;
+    letter-spacing:.05em;
+    padding: .3em .75em;
+    border-radius: 999px;
+    color: var(--teal);
+    background: var(--teal-dim);
+    border: 1px solid rgba(45,212,191,0.3);
+  }
+  .pill.violet{
+    color: var(--violet);
+    background: var(--violet-dim);
+    border-color: rgba(139,124,246,0.3);
+  }
+  .footer-brand{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-top:auto;
+    padding-top: 2vh;
+    font-family: var(--font-mono);
+    font-size:.68rem;
+    color: var(--ink-faint);
+    letter-spacing:.05em;
+  }
+  .footer-brand b{ color: var(--ink-dim); font-weight:600; }
+
+  /* ================= SLIDE 1 ================= */
+  #s1 .hero-top{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+  }
+  #s1 .logo{
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    font-weight:700;
+    letter-spacing:-0.02em;
+  }
+  #s1 .logo span{ color: var(--teal); }
+  #s1 h1{
+    font-size: 2.6rem;
+    max-width: 11.5em;
+    margin: 2.2vh 0 1vh;
+  }
+  #s1 h1 .fade{ color: var(--ink-faint); font-weight:500; }
+  #s1 .lede{
+    color: var(--ink-dim);
+    max-width: 42ch;
+    font-size: 1rem;
+    line-height:1.55;
+    margin-bottom: 3.2vh;
+  }
+  #s1 .grid4{
+    display:grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    flex:1;
+    min-height:0;
+  }
+  #s1 .card{
+    padding: 1.3rem 1.2rem;
+    display:flex;
+    flex-direction:column;
+    gap:.6rem;
+  }
+  #s1 .card .n{
+    font-family: var(--font-mono);
+    font-size:.75rem;
+    color: var(--teal);
+  }
+  #s1 .card h3{
+    font-family: var(--font-display);
+    font-size: 1.02rem;
+    font-weight:600;
+  }
+  #s1 .card p{
+    font-size:.85rem;
+    color: var(--ink-dim);
+    line-height:1.5;
+  }
+  #s1 .quote{
+    margin-top: 2.4vh;
+    padding: 1.3rem 1.6rem;
+    display:flex;
+    align-items:center;
+    gap:1rem;
+  }
+  #s1 .quote .bar{
+    width:3px;
+    align-self:stretch;
+    background: linear-gradient(180deg, var(--teal), var(--violet));
+    border-radius: 2px;
+  }
+  #s1 .quote p{
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight:500;
+    color: var(--ink);
+    line-height:1.45;
+  }
+  #s1 .quote p span{ color: var(--ink-faint); font-weight:400; }
+
+  /* ================= SLIDE 2 ================= */
+  #s2 h1{ font-size:1.9rem; margin-bottom:.3em; }
+  #s2 .sub{ color:var(--ink-dim); font-size:.95rem; margin-bottom: 2.6vh; }
+  #s2 .grid2x2{
+    display:grid;
+    grid-template-columns: repeat(2,1fr);
+    grid-template-rows: repeat(2,1fr);
+    gap:1rem;
+    flex:1;
+    min-height:0;
+  }
+  #s2 .feature{
+    padding: 1.2rem 1.4rem;
+    display:flex;
+    flex-direction:column;
+    gap:.5rem;
+    justify-content:center;
+  }
+  #s2 .feature .tags{ display:flex; gap:.5rem; margin-bottom:.3rem; }
+  #s2 .feature h3{
+    font-family: var(--font-display);
+    font-size: 1.08rem;
+    font-weight:600;
+  }
+  #s2 .feature .sm{
+    font-family: var(--font-mono);
+    font-size:.72rem;
+    color: var(--ink-faint);
+    margin-top:-.2rem;
+  }
+  #s2 .feature p{
+    font-size:.83rem;
+    color: var(--ink-dim);
+    line-height:1.5;
+  }
+  #s2 .flow{
+    margin-top: 2vh;
+    padding: .9rem 1.4rem;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    font-family: var(--font-mono);
+    font-size:.7rem;
+    letter-spacing:.03em;
+    color: var(--teal);
+    flex-wrap:wrap;
+    gap:.4rem;
+  }
+  #s2 .flow .step{ color: var(--ink); opacity:.85; }
+  #s2 .flow .arrow{ color: var(--ink-faint); }
+
+  /* ================= SLIDE 3 ================= */
+  #s3 h1{ font-size:1.9rem; margin-bottom:.3em; max-width: 14em;}
+  #s3 .sub{ color:var(--ink-dim); font-size:.95rem; margin-bottom:2.6vh; }
+  #s3 .tablewrap{
+    flex:1;
+    min-height:0;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+  }
+  #s3 table{
+    width:100%;
+    border-collapse:separate;
+    border-spacing:0;
+    font-size:.85rem;
+  }
+  #s3 thead th{
+    text-align:left;
+    font-family: var(--font-mono);
+    font-size:.68rem;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color: var(--ink-faint);
+    font-weight:500;
+    padding: .5rem .9rem .9rem;
+    border-bottom: 1px solid var(--panel-border);
+  }
+  #s3 thead th.col-a{ color: var(--ink-dim); }
+  #s3 thead th.col-b{ color: var(--teal); }
+  #s3 tbody td{
+    padding: .8rem .9rem;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    vertical-align:top;
+    line-height:1.4;
+  }
+  #s3 tbody tr:last-child td{ border-bottom:none; }
+  #s3 td.label{
+    font-weight:600;
+    color: var(--ink);
+    white-space:nowrap;
+    width: 14%;
+  }
+  #s3 td.a{ color: var(--ink-faint); width:38%; }
+  #s3 td.b{
+    color: var(--ink);
+    width:48%;
+    position:relative;
+  }
+  #s3 td.b::before{
+    content:'';
+    position:absolute;
+    left:-.4rem; top:.5rem; bottom:.5rem;
+    width:2px;
+    background: var(--teal);
+    border-radius:2px;
+    opacity:.5;
+  }
+  #s3 .caption{
+    font-size:.72rem;
+    color: var(--ink-faint);
+    margin-top: 1.2vh;
+    font-style:italic;
+  }
+  #s3 .closer{
+    margin-top:1.6vh;
+    text-align:right;
+    font-family: var(--font-display);
+    font-weight:600;
+    font-size:1rem;
+    color: var(--teal);
+  }
+
+  /* ================= SLIDE 4 ================= */
+  #s4 h1{ font-size:1.9rem; max-width:14em; margin-bottom:.4em;}
+  #s4 .sub{ color:var(--ink-dim); font-size:.9rem; max-width:60ch; margin-bottom:2.4vh; }
+  #s4 .body4{
+    flex:1;
+    min-height:0;
+    display:grid;
+    grid-template-columns: 1.35fr 1fr;
+    gap: 1.2rem;
+  }
+  #s4 .left{ display:flex; flex-direction:column; gap:1rem; }
+  #s4 .linkbox{
+    padding: 1.1rem 1.3rem;
+    font-family: var(--font-mono);
+    font-size: .82rem;
+    color: var(--teal);
+    word-break:break-all;
+    line-height:1.6;
+  }
+  #s4 .segkey{
+    display:flex;
+    gap:1.2rem;
+    flex-wrap:wrap;
+    padding: .9rem 1.3rem;
+    font-family: var(--font-mono);
+    font-size:.68rem;
+    color: var(--ink-faint);
+  }
+  #s4 .segkey b{ color: var(--ink-dim); }
+  #s4 .headline{
+    padding: 1.4rem 1.5rem;
+    flex:1;
+  }
+  #s4 .headline h2{
+    font-family: var(--font-display);
+    font-size:1.5rem;
+    font-weight:600;
+    line-height:1.25;
+    margin-bottom:.6rem;
+  }
+  #s4 .headline p{
+    color: var(--ink-dim);
+    font-size:.85rem;
+    line-height:1.55;
+    max-width:44ch;
+  }
+  #s4 .right{ display:flex; flex-direction:column; gap:1rem; }
+  #s4 .stat{
+    padding: 1.1rem 1.3rem;
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    gap:.4rem;
+  }
+  #s4 .stat .tag{ font-family:var(--font-mono); font-size:.65rem; letter-spacing:.08em; color:var(--violet); }
+  #s4 .stat p{ font-size:.85rem; color: var(--ink-dim); line-height:1.5; }
+  #s4 .cta{
+    padding: 1rem 1.3rem;
+    text-align:center;
+    font-family: var(--font-display);
+    font-weight:600;
+    font-size:.95rem;
+    color: var(--bg);
+    background: linear-gradient(120deg, var(--teal), #67e8dd);
+    border-radius:14px;
+    letter-spacing:.02em;
+  }
+  #s4 .fine{
+    font-size:.68rem;
+    color: var(--ink-faint);
+    line-height:1.5;
+    margin-top:1.2vh;
+  }
+
+  /* ---------- nav ---------- */
+  .nav{
+    position:fixed;
+    left:0; right:0; bottom:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap: 1.4rem;
+    padding: 1.4vh 0 1.6vh;
+    z-index:20;
+  }
+  .nav button{
+    all:unset;
+    cursor:pointer;
+    width:2.4rem;
+    height:2.4rem;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:50%;
+    color: var(--ink-dim);
+    border: 1px solid var(--panel-border);
+    background: rgba(255,255,255,0.03);
+    transition: all .2s ease;
+  }
+  .nav button:hover{
+    color: var(--teal);
+    border-color: rgba(45,212,191,0.4);
+    background: var(--teal-dim);
+  }
+  .dots{ display:flex; gap:.5rem; }
+  .dots .dot{
+    width:6px; height:6px;
+    border-radius:50%;
+    background: var(--panel-border);
+    cursor:pointer;
+    transition: all .25s ease;
+  }
+  .dots .dot.active{
+    width:20px;
+    background: var(--teal);
+  }
+  .counter{
+    position:fixed;
+    top: 2.4vh;
+    right: 2.6vw;
+    font-family: var(--font-mono);
+    font-size:.7rem;
+    color: var(--ink-faint);
+    letter-spacing:.05em;
+    z-index:20;
+  }
+  .counter b{ color: var(--teal); }
+  .progress{
+    position:fixed;
+    top:0; left:0;
+    height:2px;
+    background: linear-gradient(90deg, var(--teal), var(--violet));
+    z-index:21;
+    transition: width .45s ease;
+  }
+
+  @media (max-width: 900px){
+    #s1 .grid4{ grid-template-columns: repeat(2,1fr); }
+    #s2 .grid2x2{ grid-template-columns:1fr; }
+    #s4 .body4{ grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="progress" id="progress"></div>
+<div class="counter"><b id="curNum">01</b> / 04</div>
+
+<div class="deck">
+
+  <!-- SLIDE 1 -->
+  <section class="slide active" id="s1">
+    <div class="hero-top">
+      <div class="logo">Any<span>QR</span>™</div>
+      <span class="pill">Digital Product Identity</span>
+    </div>
+    <div class="kicker"><span class="num">01</span> The trust layer behind the printed QR</div>
+    <h1>What breaks after <span class="fade">packaging ships</span></h1>
+    <p class="lede">Packaging is permanent. Product information is not. AnyQR turns every printed QR into a permanent, brand-controlled proof page — updated after print and measurable after every scan.</p>
+
+    <div class="grid4">
+      <div class="glass card">
+        <span class="n">01</span>
+        <h3>Generic destinations</h3>
+        <p>A website or PDF gives little product or batch context.</p>
+      </div>
+      <div class="glass card">
+        <span class="n">02</span>
+        <h3>Dead or outdated links</h3>
+        <p>Campaigns end; printed codes remain in the market.</p>
+      </div>
+      <div class="glass card">
+        <span class="n">03</span>
+        <h3>Scattered proof</h3>
+        <p>Certificates, reports and claims live in different places.</p>
+      </div>
+      <div class="glass card">
+        <span class="n">04</span>
+        <h3>Invisible customer intent</h3>
+        <p>Brands learn little from the moment of scan.</p>
+      </div>
+    </div>
+
+    <div class="glass quote">
+      <div class="bar"></div>
+      <p>The value is not the QR code. <span>It is what the customer can trust after the scan.</span></p>
+    </div>
+
+    <div class="footer-brand">
+      <span><b>AnyQR™</b> · Digital Product Identity</span>
+      <span>anyqr.com</span>
+    </div>
+  </section>
+
+  <!-- SLIDE 2 -->
+  <section class="slide" id="s2">
+    <div class="kicker"><span class="num">02</span> One platform · everything after the scan</div>
+    <h1>AnyQR connects trust, intelligence and action</h1>
+
+    <div class="grid2x2">
+      <div class="glass feature">
+        <div class="tags"><span class="pill">PROOF</span><span class="pill violet">AI</span></div>
+        <h3>Brand-controlled Proof Pages</h3>
+        <p>Product and batch details, documents, certificates, stories and customer actions — mobile first.</p>
+        <p class="sm">AI-assisted page creation</p>
+        <p>Upload a lab report, certificate, brochure or photo. Key details are extracted and drafted for approval.</p>
+      </div>
+      <div class="glass feature">
+        <div class="tags"><span class="pill">DATA</span><span class="pill violet">LIVE</span></div>
+        <h3>Scan analytics</h3>
+        <p>Timestamp, city-level location and device; trends, top regions and weekly insight digests.</p>
+        <p class="sm">Dynamic QR + permanent fallback</p>
+        <p>Change the destination or page after printing; the code continues to resolve to a live experience.</p>
+      </div>
+      <div class="glass feature">
+        <div class="tags"><span class="pill">GS1</span><span class="pill violet">SCALE</span></div>
+        <h3>Structured product identity</h3>
+        <p>GS1 Digital Link-ready fields for GTIN, batch, expiry and serial — encoded in a standard URL structure.</p>
+        <p class="sm">Enterprise control</p>
+        <p>Bulk upload, category templates, multilingual pages, custom domains, APIs and a complete audit log.</p>
+      </div>
+      <div class="glass feature">
+        <div class="tags"><span class="pill">FLOW</span></div>
+        <h3>One continuous loop</h3>
+        <p>From packaging to proof to insight — every scan feeds the next decision, without a reprint.</p>
+      </div>
+    </div>
+
+    <div class="glass flow">
+      <span class="step">UPLOAD</span><span class="arrow">→</span>
+      <span class="step">AI DRAFTS</span><span class="arrow">→</span>
+      <span class="step">YOU REVIEW &amp; APPROVE</span><span class="arrow">→</span>
+      <span class="step">PAGE GOES LIVE</span><span class="arrow">→</span>
+      <span class="step" style="color:var(--teal)">EVERY SCAN BECOMES INSIGHT</span>
+    </div>
+  </section>
+
+  <!-- SLIDE 3 -->
+  <section class="slide" id="s3">
+    <div class="kicker"><span class="num">03</span> Proof page vs typical dynamic QR</div>
+    <h1>A redirect sends traffic. A Proof Page builds product trust.</h1>
+    <div class="tablewrap glass" style="padding:1.4rem 1.6rem;">
+      <table>
+        <thead>
+          <tr>
+            <th>What the customer gets</th>
+            <th class="col-a">Typical dynamic QR</th>
+            <th class="col-b">AnyQR Proof Page</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="label">Destination</td>
+            <td class="a">Website, PDF or campaign link</td>
+            <td class="b">Structured product or batch page</td>
+          </tr>
+          <tr>
+            <td class="label">Trust evidence</td>
+            <td class="a">Often scattered across links</td>
+            <td class="b">Documents, certificates and product details together</td>
+          </tr>
+          <tr>
+            <td class="label">Publishing control</td>
+            <td class="a">Destination can change</td>
+            <td class="b">Brand reviews, approves and owns the page</td>
+          </tr>
+          <tr>
+            <td class="label">After printing</td>
+            <td class="a">Redirect can be edited</td>
+            <td class="b">Page, fields and destination update without reprint</td>
+          </tr>
+          <tr>
+            <td class="label">Reliability</td>
+            <td class="a">Depends on destination staying live</td>
+            <td class="b">Automatic fallback keeps the printed code resolving</td>
+          </tr>
+          <tr>
+            <td class="label">Data readiness</td>
+            <td class="a">Primarily a web redirect</td>
+            <td class="b">GS1-ready GTIN, batch, expiry and serial fields</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="caption">Comparison describes common campaign-style dynamic QR use; specific platforms vary.</p>
+    </div>
+    <p class="closer">One scan → proof, action and insight</p>
+  </section>
+
+  <!-- SLIDE 4 -->
+  <section class="slide" id="s4">
+    <div class="kicker"><span class="num">04</span> Main focus · GS1 Digital Link ready</div>
+    <h1>Print for today. Structure product identity for tomorrow.</h1>
+    <p class="sub">One standards-based link can serve a phone camera now and carry identifiers that GS1-aware systems can understand.</p>
+
+    <div class="body4">
+      <div class="left">
+        <div class="glass linkbox">anyqr.com/01/08901234567890/10/LOT001/17/271231/21/AQ0000001</div>
+        <div class="glass segkey">
+          <span><b>01</b> GTIN</span>
+          <span><b>10</b> BATCH</span>
+          <span><b>17</b> EXPIRY</span>
+          <span><b>21</b> SERIAL</span>
+        </div>
+        <div class="glass headline">
+          <span class="pill">GS1 ready from day one</span>
+          <h2 style="margin-top:.7rem;">Make every product scan worth trusting.</h2>
+          <p>Start free. Build a live Proof Page. See how your existing packaging can work harder — without a redesign.</p>
+        </div>
+      </div>
+      <div class="right">
+        <div class="glass stat">
+          <span class="tag">CONSUMER</span>
+          <p>Clear, fast, brand-controlled product information.</p>
+        </div>
+        <div class="glass stat">
+          <span class="tag">BRAND</span>
+          <p>One printed code that remains editable and measurable.</p>
+        </div>
+        <div class="glass stat">
+          <span class="tag">RETAIL READINESS</span>
+          <p>Structured identifiers aligned with the move to 2D at checkout.</p>
+        </div>
+        <div class="cta">GET STARTED AT ANYQR.COM</div>
+      </div>
+    </div>
+    <p class="fine">GTIN registration is completed separately through GS1 India. AnyQR hosts brand-published content; it does not certify product claims.</p>
+    <div class="footer-brand">
+      <span><b>AnyQR™</b> · Digital Product Identity</span>
+      <span>anyqr.com</span>
+    </div>
+  </section>
+
+</div>
+
+<div class="nav">
+  <button id="prevBtn" aria-label="Previous slide">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+  </button>
+  <div class="dots" id="dots"></div>
+  <button id="nextBtn" aria-label="Next slide">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+  </button>
+</div>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const dotsWrap = document.getElementById('dots');
+  const total = slides.length;
+  let idx = 0;
+
+  slides.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    d.addEventListener('click', () => go(i));
+    dotsWrap.appendChild(d);
+  });
+  const dots = Array.from(dotsWrap.children);
+
+  function render(){
+    slides.forEach((s, i) => {
+      s.classList.remove('active','prev');
+      if(i === idx) s.classList.add('active');
+      else if(i < idx) s.classList.add('prev');
+    });
+    dots.forEach((d,i) => d.classList.toggle('active', i === idx));
+    document.getElementById('curNum').textContent = String(idx+1).padStart(2,'0');
+    document.getElementById('progress').style.width = ((idx+1)/total*100) + '%';
+    document.getElementById('prevBtn').style.opacity = idx === 0 ? '.35' : '1';
+    document.getElementById('nextBtn').style.opacity = idx === total-1 ? '.35' : '1';
+  }
+  function go(i){
+    idx = Math.max(0, Math.min(total-1, i));
+    render();
+  }
+
+  document.getElementById('prevBtn').addEventListener('click', () => go(idx-1));
+  document.getElementById('nextBtn').addEventListener('click', () => go(idx+1));
+
+  document.addEventListener('keydown', e => {
+    if(['ArrowRight','PageDown',' '].includes(e.key)) go(idx+1);
+    if(['ArrowLeft','PageUp'].includes(e.key)) go(idx-1);
+  });
+
+  let touchX = null;
+  document.addEventListener('touchstart', e => touchX = e.touches[0].clientX);
+  document.addEventListener('touchend', e => {
+    if(touchX === null) return;
+    const dx = e.changedTouches[0].clientX - touchX;
+    if(Math.abs(dx) > 50) go(dx < 0 ? idx+1 : idx-1);
+    touchX = null;
+  });
+
+  render();
+</script>
+</body>
+</html>
